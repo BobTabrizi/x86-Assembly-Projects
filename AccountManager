@@ -1,0 +1,429 @@
+.386
+.model flat,stdcall
+.stack 4096
+
+User STRUCT
+userID DWORD 0
+username BYTE 80 DUP(' ')
+User ENDS
+
+
+.data
+prompt0 BYTE "Welcome to Bob's Managing User's Program!",0
+prompt1 BYTE "How many accounts would you like to enter? (Maximum 5): ",0
+prompt2 BYTE "Enter the user ID: ",0
+prompt3 BYTE "Account Management Menu:", 10, 13,
+               "1. PRINT", 10, 13,      
+               "2. ADD", 10, 13,
+               "3. SEARCH", 10, 13,
+               "4. EXIT", 10, 13,
+               "Enter Your Option: ", 0
+prompt4 BYTE "Enter The Username: ",0
+prompt5 BYTE "The Following data has been recorded: ",0
+prompt6 BYTE "Not Found",0
+prompt7 BYTE  "Found! The username is: ",0
+prompt8 BYTE "Thank you for using my account manager",0
+prompt9 BYTE "Invalid! Enter a valid number please",0
+prompt10 BYTE "ID Number: ",0
+prompt11 BYTE "Username: ",0
+prompt12 BYTE "Sorry, There is no more available account space.",0
+prompt13 BYTE "Invalid Username. Do not use spaces in the name",0
+UserList  User  6 DUP(<>)
+
+Count DWORD ?
+Storage DWORD ?
+Storing DWORD ?
+Store BYTE ?
+.code
+
+extern ExitProcess@4 : PROC
+extern WriteInt@0 : PROC
+extern Crlf@0     : PROC
+extern ReadInt@0: PROC		
+extern WriteInt@0: PROC
+extern WriteString@0: PROC
+extern ReadString@0: PROC
+
+public main
+
+main PROC
+mov edx, OFFSET prompt0
+call WriteString@0
+call Crlf@0
+call Crlf@0
+
+mov esi, OFFSET UserList
+
+call Prompting
+cmp eax,1
+je TooMany
+
+
+
+MenuBro:
+call Menu
+
+cmp eax,1
+je print
+
+cmp eax, 2
+je addit
+
+cmp eax, 3
+je search
+
+cmp eax, 4
+je exo
+
+cmp eax, 5
+jge Erring
+
+cmp eax, 1
+jl Erring
+
+
+Print:
+call Printing
+jmp MenuBro
+
+addit:
+mov ecx, LENGTHOF UserList - 1
+cmp ecx, ebx
+je TooMany
+cmp ebx, 6
+je TooMany
+call Adding
+call Crlf@0
+jmp MenuBro
+
+search:
+call Searching
+jmp MenuBro
+
+TooMany:
+call Limit
+call Crlf@0
+jmp Menubro
+
+Erring:
+call Error
+call Crlf@0
+jmp MenuBro
+
+exo:
+Call Exit
+main ENDP
+
+
+Prompting PROC
+mov ecx, LENGTHOF UserList - 1 
+mov esi, TYPE User
+mov edi, 0
+
+mov edx, OFFSET prompt1
+call WriteString@0
+call ReadInt@0
+mov ebx, eax
+
+
+NextTime:
+mov ecx, LENGTHOF UserList - 1 
+cmp ecx, edi
+push ebx
+je EndOfLine
+
+;push eax
+;mov eax, edi
+;call WriteInt@0
+;call Crlf@0
+;pop eax
+
+;push eax
+;mov ecx, ebx 
+;mov eax, ecx
+;call WriteInt@0
+;call Crlf@0
+;pop eax
+cmp ebx, edi 
+je Ended
+mov edx, OFFSET prompt2
+call WriteString@0
+Call ReadInt@0
+mov UserList [esi].userID, eax
+
+mov edx, OFFSET prompt4
+call WriteString@0
+
+mov edx, OFFSET UserList.username
+add edx, esi
+mov ecx, sizeof(USER PTR[edx]).username
+call ReadString@0
+jmp SearchSpace
+
+SpaceRetry:
+mov edx, OFFSET prompt4
+call WriteString@0
+mov edx, OFFSET UserList.username
+add edx, esi
+mov ecx, sizeof(USER PTR[edx]).username
+call ReadString@0
+mov ebx, 0
+
+SearchSpace:
+mov ecx, sizeof(USER PTR[edx]).username
+mov al, [edx]
+cmp ecx, ebx
+je MovingOn
+cmp al, 0
+je MovingOn
+cmp al, ' '
+je NoSpace
+
+inc ebx
+inc edx
+jmp SearchSpace
+
+NoSpace:
+mov edx, OFFSET prompt13
+call WriteString@0
+call Crlf@0
+
+jmp SpaceRetry 
+
+MovingOn:
+inc edi
+add esi, TYPE User
+call Crlf@0
+call Crlf@0
+pop ebx 
+jmp NextTime
+
+EndOfLine:
+mov eax,1
+Ended:
+pop ebx
+ret
+Prompting ENDP
+
+Menu PROC 
+MenuState:
+mov edx, OFFSET prompt3
+call WriteString@0
+call ReadInt@0
+call Crlf@0
+mov Storage, eax
+ret
+
+Menu ENDP
+
+Printing PROC
+push ebp				; saving registers 
+mov ebp, esp;
+push esi;
+push ecx;
+push edx;
+push edi;
+mov ecx, 0
+
+mov edx, OFFSET prompt5
+call WriteString@0
+call Crlf@0
+mov esi, TYPE User
+mov ecx, LENGTHOF UserList - 1 
+mov edi, 0
+PrintAgain:
+mov ecx, LENGTHOF UserList - 1 
+cmp ecx, edi
+je Done
+cmp ebx, edi
+je Done
+
+mov edx, OFFSET prompt10
+call WriteString@0
+mov eax, UserList[esi].UserID
+call WriteInt@0
+call Crlf@0
+
+mov ecx, sizeof(User PTR[edx]).username
+
+LetsGo:
+mov edx, OFFSET prompt11
+call WriteString@0
+mov edx, OFFSET UserList.username
+add edx, esi
+call Writestring@0
+call Crlf@0
+call Crlf@0
+
+inc edi
+add esi, TYPE User
+jmp PrintAgain
+Done:
+pop     edi
+pop		edx
+pop		ecx
+pop		esi
+pop		ebp
+ret
+Printing ENDP
+
+Adding PROC
+push ebp				; saving registers 
+mov ebp, esp;
+push esi;
+push ecx;
+push edx;
+push edi;
+mov edi, 0
+mov esi, TYPE User
+ThinkingT:
+add esi, TYPE User
+inc edi
+cmp ebx, edi
+je PreTime
+jmp ThinkingT
+
+PreTime:
+mov ecx, LENGTHOF UserList - 1 
+cmp ecx, edi
+je GoTime 
+
+GoTime:
+mov edx, OFFSET prompt2
+call WriteString@0
+call ReadInt@0
+mov  UserList[esi].UserID, eax
+
+
+
+mov edx, OFFSET prompt4
+call WriteString@0
+mov edx, OFFSET UserList.username
+add edx, esi
+mov ecx, sizeof(User PTR[edx]).username
+call ReadString@0
+jmp SearchSpace
+
+SpaceRetry:
+mov edx, OFFSET prompt4
+call WriteString@0
+mov edx, OFFSET UserList.username
+add edx, esi
+mov ecx, sizeof(USER PTR[edx]).username
+call ReadString@0
+mov eax, 0
+
+SearchSpace:
+mov ecx, sizeof(USER PTR[edx]).username
+mov al, [edx]
+cmp ecx, eax
+je MovingOn
+cmp al, 0
+je MovingOn
+cmp al, ' '
+je NoSpace
+
+inc eax
+inc edx
+jmp SearchSpace
+
+NoSpace:
+mov edx, OFFSET prompt13
+call WriteString@0
+call Crlf@0
+jmp SpaceRetry 
+
+
+
+MovingOn:
+
+inc ebx
+
+
+Ender:
+pop     edi
+pop		edx
+pop		ecx
+pop		esi
+pop		ebp
+ret
+Adding ENDP
+
+Searching PROC
+push ebp				; saving registers 
+mov ebp, esp;
+push esi;
+push ecx;
+push edx;
+push edi;
+
+mov edi, 0
+mov ecx, 0
+mov edx, OFFSET prompt2
+call WriteString@0
+call ReadInt@0
+call Crlf@0
+
+mov esi, TYPE User			;moving array address to esi
+mov ecx, LENGTHOF UserList
+SearchLoop:
+mov edx, OFFSET UserList.username
+add edx, esi
+mov ecx, sizeof(User PTR[edx]).username
+cmp eax, UserList[esi].userID
+je Found
+add esi, TYPE User
+cmp ecx, edi
+je NotFound
+inc edi
+jmp SearchLoop
+
+NotFound:
+mov edx, OFFSET prompt6
+call WriteString@0
+call Crlf@0
+jmp ToMenu
+
+Found:
+push edx
+mov edx, OFFSET prompt7
+call WriteString@0
+pop edx
+
+call WriteString@0
+call Crlf@0
+
+ToMenu:
+call Crlf@0
+
+pop     edi
+pop		edx
+pop		ecx
+pop		esi
+pop		ebp
+ret
+Searching ENDP
+
+Limit PROC
+mov edx, OFFSET prompt12
+call WriteString@0
+call Crlf@0
+ret 
+Limit ENDP
+
+Error PROC
+mov edx, OFFSET prompt9
+call WriteString@0
+call Crlf@0
+ret
+Error ENDP
+
+Exit PROC
+mov edx, OFFSET prompt8
+call WriteString@0
+call Crlf@0
+call Crlf@0
+call ExitProcess@4
+Exit ENDP
+
+END main
