@@ -1,0 +1,153 @@
+TITLE AccountBalance Program
+.386
+.model flat, stdcall
+.stack 4096
+.data
+
+prompt1 BYTE "Please Enter the pin code: ",0
+prompt2 BYTE "Invalid pin code. Please try it again.",0
+prompt3 BYTE "Invalid pin code. You have reached the maximum retries. The Program Will Now End",0
+prompt4 BYTE "Expense Management Menu:", 10, 13,
+               "1. Earn", 10, 13,      
+               "2. Spend", 10, 13,
+               "3. Show Summary", 10, 13,
+               "4. Exit", 10, 13,
+               "Enter Your Option: ", 0
+prompt5 BYTE "Please Enter The Amount: ",0
+prompt6 BYTE "Entry Log:",0
+prompt7 BYTE "EARNING: $",0
+prompt8 BYTE "SPENDING: $",0
+prompt9 BYTE "Thank you for using the program.",0
+
+.code
+
+extern ExitProcess@4 : PROC 
+extern WriteString@0 : PROC
+extern WriteInt@0 : PROC 
+extern ReadInt@0 : PROC
+extern WriteChar@0 : PROC 
+extern ReadChar@0 : PROC
+extern Crlf@0 : PROC 
+extern Clrscr@0 : PROC 
+extern WriteChar@0: PROC 
+extern WriteFloat@0: PROC
+extern ReadFloat@0: PROC
+extern ShowFPUStack@0: PROC
+
+public main 
+
+main PROC 
+call UserPrompt
+call Menu
+main ENDP
+
+UserPrompt PROC
+push ebx
+push edi
+mov ebx, 5678
+mov edi, 8765
+mov ecx, 0
+Looper:
+mov edx, OFFSET prompt1
+call WriteString@0
+call ReadInt@0
+call Crlf@0
+
+cmp eax, ebx
+je Ending
+
+cmp eax, edi
+je Ending
+
+cmp ecx, 2
+je yikes
+
+mov edx, OFFSET prompt2
+call WriteString@0
+Call Crlf@0
+inc ecx
+jmp Looper
+
+Yikes:
+mov edx, OFFSET prompt3
+call WriteString@0
+call Crlf@0
+call Crlf@0
+mov ecx, 5
+
+Ending:
+pop edx
+pop edi
+UserPrompt ENDP
+
+Menu PROC
+cmp ecx, 5
+je Exit
+mov edi, 0
+mov ebx, 0
+Mained:
+mov edx, OFFSET prompt4
+call WriteString@0
+Call ReadInt@0
+Call Crlf@0
+
+cmp eax, 1
+je AddOne
+
+cmp eax, 2
+je AddTwo
+
+cmp eax, 3 
+je ShowAll
+
+cmp eax, 4
+je Exit
+
+AddOne:
+mov edx, OFFSET prompt5
+call WriteString@0
+call ReadInt@0
+call Crlf@0
+
+add edi, eax 
+
+jmp Mained
+
+AddTwo:
+mov edx, OFFSET prompt5
+call WriteString@0
+call ReadInt@0
+call Crlf@0
+
+add ebx, eax
+
+jmp Mained
+
+ShowAll:
+mov edx, OFFSET prompt6
+call WriteString@0
+call Crlf@0
+
+mov eax, ebx 
+mov edx, OFFSET prompt8
+call WriteString@0
+call WriteInt@0
+Call Crlf@0
+
+
+mov eax, edi
+mov edx, OFFSET prompt7
+call WriteString@0
+call WriteInt@0
+call Crlf@0
+call Crlf@0
+jmp Mained
+
+Exit:
+mov edx, OFFSET prompt9
+call WriteString@0
+call Crlf@0
+call Crlf@0
+Menu ENDP
+Call ExitProcess@4
+END main
