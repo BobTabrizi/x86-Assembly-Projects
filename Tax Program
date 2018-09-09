@@ -1,0 +1,109 @@
+TITLE CalcTax Program
+.386
+.model flat, stdcall
+.stack 4096
+
+.data
+prompt1 BYTE "Welcome to the Tax Calculation Program By Bob Tabrizi",0
+prompt2 BYTE "Please enter the amount from the W2 Form: ",0
+prompt3 BYTE "Please enter the interest income: ",0
+prompt4 BYTE "Please enter the paid tax amount: ",0
+prompt5 BYTE "Invalid Amount. The amount cannot be negative.",0
+prompt6 BYTE "Invalid Amount. The amount cannot be greater than total income",0
+prompt7 BYTE "Please enter the amount for deduction: ",0
+prompt8 BYTE "Income: "
+prompt9 BYTE "Interest: ",0
+prompt10 BYTE "Deduction: ",0
+prompt11 BYTE "Paid Tax: ",0
+prompt12 BYTE "Tax Amount: ",0
+prompt13 BYTE "--------------------",0
+prompt14 BYTE "Due: ",0
+prompt15 BYTE "Refund: ",0
+prompt16 BYTE "Do you want to calculate the tax for another income (y/n)?",0
+
+
+
+.code
+
+extern ExitProcess@4 : PROC 
+extern WriteString@0 : PROC
+extern WriteInt@0 : PROC 
+extern ReadInt@0 : PROC
+extern WriteChar@0 : PROC 
+extern ReadChar@0 : PROC
+extern Crlf@0 : PROC 
+extern Clrscr@0 : PROC 
+
+
+public main 
+
+main PROC 
+call Clrscr@0
+Call Welcome
+Call IntPrompt
+Call ProcessingNumbers
+main ENDP 
+
+
+Welcome PROC
+
+mov edx, OFFSET prompt1  ; Introducing Program to User
+Call WriteString@0
+Call Crlf@0
+Welcome ENDP
+
+IntPrompt PROC 
+
+mov edx, OFFSET prompt2 ; Prompting user for data
+Call WriteString@0
+Call ReadInt@0
+Call Crlf@0
+mov ebx, eax		;save the integer in ebx to compare later 
+
+
+mov edx, OFFSET prompt3
+Call WriteString@0
+Call ReadInt@0
+Call Crlf@0
+mov edi, eax		;save the integer in the edi register
+
+Begin:
+mov edx, OFFSET prompt4
+Call WriteString@0
+Call ReadInt@0
+Call Crlf@0
+mov  ecx, eax	; save integer in ecx register 
+IsNegative: 
+cmp ecx, 0
+jl Negative
+
+EqualAmount:
+cmp ecx, ebx
+jg AmountSame
+jmp Next
+
+Negative:
+
+mov edx, OFFSET prompt5
+Call WriteString@0
+Call Crlf@0
+jmp Begin
+
+AmountSame:
+
+mov edx, OFFSET prompt6
+Call WriteString@0
+Call Crlf@0
+jmp Begin
+
+Next:
+mov edx, OFFSET prompt7
+Call WriteString@0
+Call ReadInt@0
+Call Crlf@0
+mov edx, eax	; save the integer in ecx
+
+
+IntPrompt ENDP
+Call ExitProcess@4
+END main
